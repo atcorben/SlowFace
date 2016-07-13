@@ -1,0 +1,28 @@
+{
+    "author": "Flourescent",
+    "dependencies": {},
+    "keywords": [],
+    "name": "slow",
+    "pebble": {
+        "capabilities": [
+            ""
+        ],
+        "displayName": "Slow",
+        "enableMultiJS": false,
+        "messageKeys": {},
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "basalt",
+            "chalk"
+        ],
+        "uuid": "ecc8f112-318f-4ee2-be11-53c63b8a1139",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.0.0"
+}
