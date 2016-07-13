@@ -1,11 +1,11 @@
 #include "slow.h"
-#include <math.h>
 #include "pebble.h"
 
 static Window *s_window;
 static Layer *s_simple_bg_layer, *s_hands_layer;
 
 static GPath *s_tick_paths[NUM_CLOCK_TICKS];
+static TextLayer *s_time_layer[NUM_CLOCK_TICKS/2];
 
 static void bg_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
@@ -35,7 +35,39 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
                          1, GCornersAll);
     }
   }
-
+  
+  //Draw numbers
+  static char *numbuf[12];
+  //fill numbuf
+  numbuf[0] = "0";
+  numbuf[1] = "2";
+  numbuf[2] = "4 ";
+  numbuf[3] = "6 ";
+  numbuf[4] = "8 ";
+  numbuf[5] = "10";
+  numbuf[6] = "12";
+  numbuf[7] = "14";
+  numbuf[8] = "16";
+  numbuf[9] = "18";
+  numbuf[10] = "20";
+  numbuf[11] = "22";
+  
+  int index = 0;
+  for (int i = 0; i < NUM_CLOCK_TICKS/2; ++i){
+    s_time_layer[i] = text_layer_create(
+        GRect((int16_t) (center.x - 13) - (sin_lookup(TRIG_MAX_ANGLE * ((i*2 % NUM_CLOCK_TICKS) * 6) / (NUM_CLOCK_TICKS * 6)) * (int32_t)(hour_hand_length - 2) / TRIG_MAX_RATIO),
+              (int16_t) (center.y - 13) - (-cos_lookup(TRIG_MAX_ANGLE * ((i*2 % NUM_CLOCK_TICKS) * 6) / (NUM_CLOCK_TICKS * 6)) * (int32_t)(hour_hand_length - 2) / TRIG_MAX_RATIO), 25, 25));
+  
+    // Improve the layout to be more like a watchface
+    text_layer_set_background_color(s_time_layer[i], GColorClear);
+    text_layer_set_text_color(s_time_layer[i], GColorLightGray);
+    text_layer_set_text(s_time_layer[i], numbuf[i]);
+    text_layer_set_font(s_time_layer[i], fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+    text_layer_set_text_alignment(s_time_layer[i], GTextAlignmentCenter);
+  
+    // Add it as a child layer to the Window's root layer
+    layer_add_child(s_simple_bg_layer, text_layer_get_layer(s_time_layer[i]));
+  }
 }
 
 static void hands_update_proc(Layer *layer, GContext *ctx) {
@@ -49,7 +81,7 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   // hour hand
   graphics_context_set_fill_color(ctx, GColorDarkGray);
   graphics_context_set_stroke_color(ctx, GColorDarkGray);
-  graphics_context_set_stroke_width(ctx, 5);
+  graphics_context_set_stroke_width(ctx, 3);
 
   int32_t hour_angle = TRIG_MAX_ANGLE * (((t->tm_hour % 24) * 6) + (t->tm_min / 10)) / (24 * 6);
   GPoint hour_hand_tip = {
@@ -67,7 +99,7 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
 
   // dot in the middle
   graphics_context_set_fill_color(ctx, GColorDarkGray);
-  graphics_fill_rect(ctx, GRect(bounds.size.w / 2 - 10, bounds.size.h / 2 - 10, 20, 20), 10, GCornersAll);
+  graphics_fill_rect(ctx, GRect(bounds.size.w / 2 - 7, bounds.size.h / 2 - 7, 15, 15), 10, GCornersAll);
 }
 
 
@@ -90,7 +122,9 @@ static void window_load(Window *window) {
 
 static void window_unload(Window *window) {
   layer_destroy(s_simple_bg_layer);
-
+  for (int i = 0; i < NUM_CLOCK_TICKS/2; ++i){
+    text_layer_destroy(s_time_layer[i]);
+  }
   layer_destroy(s_hands_layer);
 }
 
